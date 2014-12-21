@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <style>
+        body {
+            max-width: 1024px;
+            margin: 0;
+            font-family: sans-serif;
+        }
+        output ul {
+            background-color: #DBEBFF;
+            border-radius: 5px;
+            margin: 0 8px;
+            padding: 5px 10px;
+            padding: 0 0 0 20px;
+        }
+        output li {
+            position: relative;
+            margin: 10px;
+            padding: 10px 0;
+        }
+        button {
+            /* margin: 0 25px; */
+            right: 0px;
+            position: absolute;
+        }
+        a {
+            text-decoration: blink;
+        }
+        a.dir {
+            background-color: #FCFF92;
+            border: 1px dotted #000;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        #drop_zone {
+            border: 2px dashed #bbb;
+            -moz-border-radius: 5px;
+            -webkit-border-radius: 5px;
+            border-radius: 5px;
+            padding: 25px;
+            text-align: center;
+            font: 20pt bold'Vollkorn';
+            color: #bbb;
+            max-width: 954px;
+            margin: 8px;
+        }
+        #drop_zone.over {
+            border: 1px solid #000;
+            background-color: #00BB25;
+            color: #FFF;
+        }
+        .progress_bar {
+            margin: 10px 0;
+            padding: 3px;
+            border: 1px solid #000;
+            font-size: 14px;
+            clear: both;
+            opacity: 1;
+            -moz-transition: opacity 1s linear;
+            -o-transition: opacity 1s linear;
+            -webkit-transition: opacity 1s linear;
+        }
+        .progress_bar.loading {
+            opacity: 1.0;
+        }
+        .progress_bar .percent {
+            background-color: #99ccff;
+            height: auto;
+            width: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="drop_zone">Drop files here</div>
+    <output id="list"></output>
+
+    <script src="/?resumable.js"></script>
+    <script src="/?upload.js"></script>
+
+    <ul>#{fileList}</ul>
+</body>
+
+</html>
