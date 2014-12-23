@@ -107,6 +107,12 @@ public class Server {
 		}
 		IOUtils.copy(is, resp.raw().getOutputStream());
 	}
+	
+	private static void outFile(File f, String name, Response resp)
+			throws IOException {
+		resp.header("Content-Length", String.valueOf(f.length()));
+		outFile(new java.io.FileInputStream(f), name, resp);
+	}
 
 	public static void main(String[] args) {
 		if (args.length != 2) {
@@ -140,7 +146,7 @@ public class Server {
 				if (f.isDirectory()) {
 					lsdir(f, req.pathInfo(), resp);
 				} else if (f.isFile()) {
-					outFile(new java.io.FileInputStream(f), name, resp);
+					outFile(f, name, resp);
 				} else if (!f.exists()) {
 					System.out.println("File[" + f.getAbsolutePath() + "] not found.");
 					resp.status(404);
@@ -162,9 +168,9 @@ public class Server {
 				ServletFileUpload upload = new ServletFileUpload();
 
 				// Parse the request
+				RandomAccessFile raf = null;
 				try {
-					FileItemIterator iter = upload
-							.getItemIterator(request.raw());
+					FileItemIterator iter = upload.getItemIterator(request.raw());
 					Map<String, String> map = new HashMap<String, String>();
 
 					while (iter.hasNext()) {
@@ -174,25 +180,24 @@ public class Server {
 						if (item.isFormField()) {
 							map.put(name, IOUtils.toString(stream));
 						} else {
+							long position = (Integer.parseInt(map.get("resumableChunkNumber")) - 1)	
+									* Long.parseLong(map.get("resumableChunkSize"));
+							int size = Integer.parseInt(map.get("resumableCurrentChunkSize"));
+							int readed = 0;
+							
 							// Process the input stream
-							RandomAccessFile raf = new RandomAccessFile(
-									uploadFileLocation + map.get("resumableFilename"), "rw");
-
+							raf = new RandomAccessFile(uploadFileLocation + map.get("resumableFilename"), "rw");
 							// Seek to position
-							raf.seek((Integer.parseInt(map
-									.get("resumableChunkNumber")) - 1)
-									* Long.parseLong(map.get("resumableChunkSize")));
-
+							raf.seek(position);
 							// Save to file
-							long readed = 0;
-							byte[] bytes = new byte[1024 * 100];
+							byte[] bytes = new byte[1024 * 8];
 							for (int r; (r = stream.read(bytes)) != -1;) {
 								raf.write(bytes, 0, r);
 								readed += r;
-							}
+							}							
 							IOUtils.closeQuietly(raf);
 
-							if (readed != Integer.parseInt(map.get("resumableCurrentChunkSize"))) {
+							if (readed != size) {
 								halt(206, "Chunk broken");
 							}
 							System.out.println("File[" + map.get("resumableFilename") + "] chunk "
@@ -202,6 +207,8 @@ public class Server {
 					}
 				} catch (Exception e) {
 					throw new RuntimeException(e);
+				} finally{
+					IOUtils.closeQuietly(raf);
 				}
 			}
 			return "Chunk finished";

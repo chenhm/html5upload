@@ -47,9 +47,9 @@ function handleFileSelect(evt) {
     // files is a FileList of File objects. List some properties.
 
 
-//    for (var i = 0, f; f = files[i]; i++) {
-//        handleFile(f);
-//    }
+    //    for (var i = 0, f; f = files[i]; i++) {
+    //        handleFile(f);
+    //    }
     //document.getElementById('list').innerHTML = '<ul>' + output.join('') + '</ul>';
 }
 
@@ -58,7 +58,6 @@ function handleDragOver(evt) {
     evt.preventDefault();
     evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
 }
-
 
 function errorHandler(evt) {
     switch (evt.target.error.code) {
@@ -75,57 +74,70 @@ function errorHandler(evt) {
     };
 }
 
-
-
-function handleFile(file) {
-    // Reset progress indicator on new file selection.
-
-    var output = [];
-    var li = document.createElement('li');
-    console.log(file)
-    output.push('<strong>', escape(file.file.name), '</strong> - ',
-        file.file.size, ' bytes');
-    li.innerHTML = output.join('');
-
-    uploadList.appendChild(li);
-
-
-    var btn = document.createElement('button');
-    btn.addEventListener('click', function() {
-        r.cancel();
-    })
-    btn.innerText = 'Cancel upload';
-    li.appendChild(btn);
-    var progress_bar = document.createElement('div');
-    progress_bar.classList.add('progress_bar');
-    li.appendChild(progress_bar);
-
-    var progress = progress_bar.appendChild(document.createElement('div'));
-    progress.className = "percent";
-    progress.style.width = '0%';
-    progress.textContent = '0%';
-
-    progress.classList.add('loading');
-
-    r.on('fileSuccess', function(e) {
-
-        // Ensure that the progress bar displays 100% at the end.
-        progress.style.width = '100%';
-        progress.textContent = '100%';
-        setTimeout(function(){
-            window.location.reload()
-        },3000)
-        
-    })
-    
-    r.on('progress', function(){
-
-        var percentLoaded = Math.round(r.progress() * 100);
-        // Increase the progress bar length.
-        if (percentLoaded < 100) {
-            progress.style.width = percentLoaded + '%';
-            progress.textContent = percentLoaded + '%';
-        }
-    })
-
+var formatSize = function(size) {
+    if (size < 1024) {
+        return size.toFixed(0) + ' bytes';
+    } else if (size < 1024 * 1024) {
+        return (size / 1024.0).toFixed(0) + ' KB';
+    } else if (size < 1024 * 1024 * 1024) {
+        return (size / 1024.0 / 1024.0).toFixed(1) + ' MB';
+    } else {
+        return (size / 1024.0 / 1024.0 / 1024.0).toFixed(1) + ' GB';
+    }
 }
+
+    function handleFile(file) {
+        // Reset progress indicator on new file selection.
+
+        var output = [];
+        var li = document.createElement('li');
+        console.log(file)
+        output.push('<strong>', escape(file.file.name), '</strong> - ',
+            file.file.size, ' bytes');
+        li.innerHTML = output.join('');
+
+        uploadList.appendChild(li);
+
+
+        var btn = document.createElement('button');
+        btn.addEventListener('click', function() {
+            r.cancel();
+        })
+        btn.innerText = 'Cancel upload';
+        li.appendChild(btn);
+        var progress_bar = document.createElement('div');
+        progress_bar.classList.add('progress_bar');
+        li.appendChild(progress_bar);
+
+        var progress = progress_bar.appendChild(document.createElement('div'));
+        progress.className = "percent";
+        progress.style.width = '0%';
+        progress.textContent = '0%';
+        progress.classList.add('loading');
+        
+        var speed = progress_bar.appendChild(document.createElement('div'));
+        speed.className = "speed";
+        
+        r.on('fileSuccess', function(e) {
+            // Ensure that the progress bar displays 100% at the end.
+            progress.style.width = '100%';
+            progress.textContent = '100%';
+            setTimeout(function() {
+                window.location.reload()
+            }, 3000)
+        })
+
+        var start = new Date().getTime();
+        r.on('progress', function() {
+            var percentLoaded = Math.round(file.progress() * 100);
+
+            // Increase the progress bar length.
+            if (percentLoaded < 100) {
+                var now = new Date().getTime();
+                progress.style.width = percentLoaded + '%';
+                progress.textContent = percentLoaded + '%';
+                speed.textContent = formatSize(r.getSize() / (now - start) * 1000) + '/s';
+            }
+        })
+
+    }
