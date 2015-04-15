@@ -1,9 +1,10 @@
 var r = new Resumable({
     target: '/',
-    testChunks: false
+    //testChunks: false
 });
 
 r.assignDrop(document.getElementById('drop_zone'));
+r.assignBrowse(document.getElementById('fileBrowse'));
 
 r.on('fileAdded', function(file, event) {
     //console.log(file)
@@ -124,7 +125,7 @@ var formatSize = function(size) {
             progress.textContent = '100%';
             setTimeout(function() {
                 window.location.reload()
-            }, 3000)
+            }, 5000)
         })
 
         var start = new Date().getTime();
